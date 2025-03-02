@@ -109,7 +109,7 @@ jobs:
     - name: 导入补丁和配置
       run: |
         [ -e files ] && mv files openwrt/files
-        cat configs/rax3000m-emmc_mtksdk.config >> openwrt/.config
+        cat configs/rax3000m-nand_mtksdk.config >> openwrt/.config
 
     - name: 设置无线控制界面样式
       if: env.USE_MTWIFI_CFG == 'true'
