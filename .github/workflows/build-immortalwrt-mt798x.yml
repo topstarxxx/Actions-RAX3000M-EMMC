@@ -40,6 +40,7 @@ env:
   ENV_SH: scripts/environment.sh
   DIY_SH: scripts/diy.sh
   DIY1_SH: scripts/diy1.sh
+  DIY2_SH: scripts/diy2.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: false
   UPLOAD_RELEASE: true
@@ -95,6 +96,7 @@ jobs:
         #git merge FETCH_HEAD
         ./scripts/feeds update -a && ./scripts/feeds install -a        
         chmod +x $GITHUB_WORKSPACE/$DIY_SH && $GITHUB_WORKSPACE/$DIY_SH
+        chmod +x $GITHUB_WORKSPACE/$DIY2_SH && $GITHUB_WORKSPACE/$DIY2_SH
 
     - name: 修复 Go 语言版本
       run: |
@@ -132,7 +134,7 @@ jobs:
       run: |
         cd openwrt
         make defconfig
-        make download -j8 V=10
+        make download -j$(nproc) V=10
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
@@ -140,8 +142,8 @@ jobs:
       id: compile
       run: |
         cd openwrt
-        echo -e "$(($(nproc)+1)) thread compile"
-        make -j$(($(nproc)+1)) || make -j$(nproc) || make -j1 V=s
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 V=99
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 空间使用情况
@@ -178,7 +180,7 @@ jobs:
       id: tag
       if: env.UPLOAD_RELEASE == 'true' && steps.compile.outputs.status == 'success' && !cancelled()
       run: |
-        echo -e "### immortalwrt-mt7981-cmcc_rax3000m-emmc" >> release.txt
+        echo -e "### immortalwrt-mt7981-cmcc_rax3000m-nand" >> release.txt
         wlan_luci_interface=""
         if grep -q 'CONFIG_PACKAGE_mtwifi-cfg=y' openwrt/.config; then
           echo "- 使用 OpenWrt 原生无线控制界面" >> release.txt
@@ -187,9 +189,7 @@ jobs:
           echo "- 使用 MTK SDK 无线控制界面" >> release.txt
           wlan_luci_interface="luci-app-mtk"
         fi
-        max_frequency=$(($(grep -oP "max-frequency = <\K[0-9]*" openwrt/target/linux/mediatek/files-5.4/arch/arm64/boot/dts/mediatek/mt7981-cmcc-rax3000m-emmc.dts) / 1000000))
-        echo "- 使用闪存频率: ${max_frequency}MHz" >> release.txt
-        release_tag=$(date +"%Y.%m.%d-mt7981-cmcc_rax3000m-emmc-${wlan_luci_interface}-${eeprom_status}-${max_frequency}MHz-withDockerman")
+        release_tag=$(date +"%Y.%m.%d-mt7981-cmcc_rax3000m-nand-${wlan_luci_interface}-${eeprom_status}")
         echo "release_tag=${release_tag}" >> $GITHUB_OUTPUT
         echo "status=success" >> $GITHUB_OUTPUT
 
