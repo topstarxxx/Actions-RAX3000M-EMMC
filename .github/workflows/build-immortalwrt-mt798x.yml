@@ -91,7 +91,6 @@ jobs:
         #git merge FETCH_HEAD
         ./scripts/feeds update -a && ./scripts/feeds install -a        
         chmod +x $GITHUB_WORKSPACE/$DIY_SH && $GITHUB_WORKSPACE/$DIY_SH
-        chmod +x $GITHUB_WORKSPACE/$DIY2_SH && $GITHUB_WORKSPACE/$DIY2_SH
 
     - name: 修复 Go 语言版本
       run: |
